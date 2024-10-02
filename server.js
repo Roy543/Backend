@@ -2,33 +2,26 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const ics = require('ics');
-const cors = require('cors');
 
 const app = express();
 
-// Use CORS to allow requests from your Vercel frontend URL
-app.use(cors({
-  origin: 'https://date-invite-eight.vercel.app', // Allow your Vercel frontend URL
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-}));
+// Middleware to handle CORS for all requests
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://date-invite-eight.vercel.app'); // Allow your frontend domain
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // If this is a preflight request, send a response immediately
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
 
 app.use(bodyParser.json());
 
-// Handle preflight `OPTIONS` request explicitly
-app.options('/send-invite', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://date-invite-eight.vercel.app');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.sendStatus(200);
-});
-
 app.post('/send-invite', (req, res) => {
-  // Set CORS headers for the response
-  res.setHeader('Access-Control-Allow-Origin', 'https://date-invite-eight.vercel.app');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-
   const { date, userEmail } = req.body;
 
   // Parse the date string into a Date object
