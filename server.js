@@ -6,40 +6,21 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors({
-  origin: 'https://date-invite-eight.vercel.app', // Replace with your Vercel app URL
+  origin: 'https://date-invite-eight.vercel.app', // Allow your Vercel frontend URL
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
 }));
+
 app.use(bodyParser.json());
 
 app.post('/send-invite', (req, res) => {
+  // Set CORS headers for the response
+  res.setHeader('Access-Control-Allow-Origin', 'https://date-invite-eight.vercel.app'); // Allow your Vercel frontend URL
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
   const { date, userEmail } = req.body;
 
-  // Parse the date string into a Date object
-  const parsedDate = new Date(date); // Ensure the date is a Date object
-  
-  // Check if the parsed date is valid
-  if (isNaN(parsedDate)) {
-    return res.status(400).send('Invalid date format');
-  }
-
-  const event = {
-    start: [
-      parsedDate.getFullYear(),
-      parsedDate.getMonth() + 1,
-      parsedDate.getDate(),
-      parsedDate.getHours(),
-      parsedDate.getMinutes()
-    ],
-    duration: { hours: 2, minutes: 0 },
-    title: 'Our Cute Date! ❤️',
-    description: 'I’m really looking forward to our date! 🥰',
-    location: 'Your Favorite Place', // You can replace this with a specific location
-    status: 'CONFIRMED',
-    busyStatus: 'BUSY',
-    attendees: [
-      { name: 'You', email: 'sahilsas88@gmail.com' }, // Your email
-      { name: 'User', email: userEmail } // User's email
-    ]
-  };
+  // Your existing code for parsing date and creating the event...
 
   ics.createEvent(event, (error, value) => {
     if (error) {
@@ -52,8 +33,8 @@ app.post('/send-invite', (req, res) => {
       service: 'gmail',
       auth: {
         user: 'sahilsas88@gmail.com',
-        pass: 'svsb nccn azqx axcv' // Use app password for security
-      }
+        pass: 'svsb nccn azqx axcv', // Use app password for security
+      },
     });
 
     const mailOptions = {
@@ -81,8 +62,8 @@ Sahil ❤️
       icalEvent: {
         filename: 'invite.ics',
         method: 'REQUEST',
-        content: value
-      }
+        content: value,
+      },
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
