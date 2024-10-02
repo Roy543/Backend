@@ -5,7 +5,9 @@ const ics = require('ics');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://date-invite-eight.vercel.app', // Replace with your Vercel app URL
+}));
 app.use(bodyParser.json());
 
 app.post('/send-invite', (req, res) => {
