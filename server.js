@@ -5,22 +5,59 @@ const ics = require('ics');
 const cors = require('cors');
 
 const app = express();
+
+// Use CORS to allow requests from your Vercel frontend URL
 app.use(cors({
   origin: 'https://date-invite-eight.vercel.app', // Allow your Vercel frontend URL
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
 }));
 
 app.use(bodyParser.json());
 
+// Handle preflight `OPTIONS` request explicitly
+app.options('/send-invite', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://date-invite-eight.vercel.app');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(200);
+});
+
 app.post('/send-invite', (req, res) => {
   // Set CORS headers for the response
-  res.setHeader('Access-Control-Allow-Origin', 'https://date-invite-eight.vercel.app'); // Allow your Vercel frontend URL
+  res.setHeader('Access-Control-Allow-Origin', 'https://date-invite-eight.vercel.app');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+
   const { date, userEmail } = req.body;
 
-  // Your existing code for parsing date and creating the event...
+  // Parse the date string into a Date object
+  const parsedDate = new Date(date); // Ensure the date is a Date object
+
+  // Check if the parsed date is valid
+  if (isNaN(parsedDate)) {
+    return res.status(400).send('Invalid date format');
+  }
+
+  const event = {
+    start: [
+      parsedDate.getFullYear(),
+      parsedDate.getMonth() + 1,
+      parsedDate.getDate(),
+      parsedDate.getHours(),
+      parsedDate.getMinutes(),
+    ],
+    duration: { hours: 2, minutes: 0 },
+    title: 'Our Cute Date! ❤️',
+    description: 'I’m really looking forward to our date! 🥰',
+    location: 'Your Favorite Place', // You can replace this with a specific location
+    status: 'CONFIRMED',
+    busyStatus: 'BUSY',
+    attendees: [
+      { name: 'You', email: 'sahilsas88@gmail.com' }, // Your email
+      { name: 'User', email: userEmail }, // User's email
+    ],
+  };
 
   ics.createEvent(event, (error, value) => {
     if (error) {
