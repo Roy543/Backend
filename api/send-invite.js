@@ -6,7 +6,7 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors({
-  origin: ["https://date-invite-eight.vercel.app"],
+  origin: ["https://frontend-psi-sable-50.vercel.app"],
   methods: ["POST", "GET"],
   credentials: true
 }));
