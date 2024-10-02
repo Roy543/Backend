@@ -1,25 +1,29 @@
+// server.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const ics = require('ics');
 const cors = require('cors');
+require('dotenv').config(); // Load environment variables from .env file
 
 const app = express();
-app.use(cors({
-  origin: ["https://frontend-psi-sable-50.vercel.app"],
-  methods: ["POST", "GET"],
-  credentials: true
-}));
+const PORT = process.env.PORT || 5000;
 
+// Middleware
+app.use(cors());
 app.use(bodyParser.json());
 
-// Handle GET request to the root route
-app.get('/', (req, res) => {
-  res.send('Welcome to the backend of the Date Invite App!');
+// Nodemailer setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL, // Your Gmail address
+    pass: process.env.APP_PASSWORD // Your Gmail app password
+  }
 });
 
-// Handle POST request to send the invite
-app.post('/api/send-invite', (req, res) => {
+// POST endpoint to send the invite
+app.post('/send-invite', (req, res) => {
   const { date, userEmail } = req.body;
 
   // Parse the date string into a Date object
@@ -27,6 +31,7 @@ app.post('/api/send-invite', (req, res) => {
   
   // Check if the parsed date is valid
   if (isNaN(parsedDate)) {
+    console.error('Invalid date format:', date);
     return res.status(400).send('Invalid date format');
   }
 
@@ -41,36 +46,26 @@ app.post('/api/send-invite', (req, res) => {
     duration: { hours: 2, minutes: 0 },
     title: 'Our Cute Date! ❤️',
     description: 'I’m really looking forward to our date! 🥰',
-    location: 'Your Favorite Place', // Replace with a specific location if needed
+    location: 'Your Favorite Place', // You can replace this with a specific location
     status: 'CONFIRMED',
     busyStatus: 'BUSY',
     attendees: [
-      { name: 'You', email: 'sahilsas88@gmail.com' }, // Your email
+      { name: 'You', email: process.env.EMAIL }, // Your email
       { name: 'User', email: userEmail } // User's email
     ]
   };
 
   ics.createEvent(event, (error, value) => {
     if (error) {
-      console.log(error);
+      console.error('Error generating ICS file:', error);
       return res.status(500).send('Error generating invite');
     }
 
-    // Nodemailer setup
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'sahilsas88@gmail.com',
-        pass: 'svsb nccn azqx axcv' // Use app password for security
-      }
-    });
-
     const mailOptions = {
-      from: 'sahilsas88@gmail.com',
-      to: `${userEmail}, sahilsas88@gmail.com`,
+      from: process.env.EMAIL,
+      to: `${userEmail}, ${process.env.EMAIL}`,
       subject: 'Yay! Our Date is Set! 🥳❤️',
-      text: `
-Hey Marmee!
+      text: `Hey Marmee!
 
 Guess what? You have officially accepted my date invite, and I couldn’t be more excited! 🥰
 
@@ -78,6 +73,7 @@ We're going to have a date that will make even the cheesiest rom-coms jealous. I
 
 Details:
 
+When: ${parsedDate.toLocaleString()}
 Where: Your Favorite Place (because you deserve the best!)
 
 Bring your awesome self, your lovely smile, and maybe an appetite for some fun surprises!
@@ -85,8 +81,7 @@ Bring your awesome self, your lovely smile, and maybe an appetite for some fun s
 Can't wait to see you!
 
 Cheers,
-Sahil ❤️
-      `,
+Sahil ❤️`,
       icalEvent: {
         filename: 'invite.ics',
         method: 'REQUEST',
@@ -96,14 +91,16 @@ Sahil ❤️
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.log(error);
+        console.error('Error sending email:', error);
         return res.status(500).send('Error sending email');
       }
+      console.log('Email sent:', info.response);
       res.send('Invite and email sent successfully!');
     });
   });
 });
 
-app.listen(5000, () => {
-  console.log('Server is running on http://localhost:5000');
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
