@@ -2,23 +2,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const ics = require('ics');
+const cors = require('cors');
 
 const app = express();
-
-// Middleware to handle CORS for all requests
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://date-invite-eight.vercel.app'); // Allow your frontend domain
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // If this is a preflight request, send a response immediately
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+app.use(cors(
+  {
+  origin: ["https://date-invite-eight.vercel.app/"],
+  methods: ["POST", "GET"],
+  credentials: true
   }
-  
-  next();
-});
-
+  ));
 app.use(bodyParser.json());
 
 app.post('/send-invite', (req, res) => {
@@ -26,7 +19,7 @@ app.post('/send-invite', (req, res) => {
 
   // Parse the date string into a Date object
   const parsedDate = new Date(date); // Ensure the date is a Date object
-
+  
   // Check if the parsed date is valid
   if (isNaN(parsedDate)) {
     return res.status(400).send('Invalid date format');
@@ -38,7 +31,7 @@ app.post('/send-invite', (req, res) => {
       parsedDate.getMonth() + 1,
       parsedDate.getDate(),
       parsedDate.getHours(),
-      parsedDate.getMinutes(),
+      parsedDate.getMinutes()
     ],
     duration: { hours: 2, minutes: 0 },
     title: 'Our Cute Date! ❤️',
@@ -48,8 +41,8 @@ app.post('/send-invite', (req, res) => {
     busyStatus: 'BUSY',
     attendees: [
       { name: 'You', email: 'sahilsas88@gmail.com' }, // Your email
-      { name: 'User', email: userEmail }, // User's email
-    ],
+      { name: 'User', email: userEmail } // User's email
+    ]
   };
 
   ics.createEvent(event, (error, value) => {
@@ -63,8 +56,8 @@ app.post('/send-invite', (req, res) => {
       service: 'gmail',
       auth: {
         user: 'sahilsas88@gmail.com',
-        pass: 'svsb nccn azqx axcv', // Use app password for security
-      },
+        pass: 'svsb nccn azqx axcv' // Use app password for security
+      }
     });
 
     const mailOptions = {
@@ -92,8 +85,8 @@ Sahil ❤️
       icalEvent: {
         filename: 'invite.ics',
         method: 'REQUEST',
-        content: value,
-      },
+        content: value
+      }
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
